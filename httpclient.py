@@ -100,16 +100,16 @@ class HTTPClient(object):
         body = ""
 
         urlHost, urlPort = self.get_host_port(url)
-        print((urlHost, urlPort))
+        # print((urlHost, urlPort))
         urlPath = urllib.parse.urlparse(url).path
         if urlPath == "":
             urlPath = '/'
-        sock = self.connect(urlHost, urlPort)
+        self.connect(urlHost, urlPort)
 
         requestStr = f"GET " + urlPath + " HTTP/1.1\r\nHost: " + urlHost + "\r\nConnection: close\r\n\r\n"
         self.sendall(requestStr)
         
-        response = self.recvall(sock)
+        response = self.recvall(self.socket)
 
         
 
@@ -121,33 +121,35 @@ class HTTPClient(object):
     
     
     def POST(self, url, args=None):
-        code = 500
+        code = 200
         body = ""
-        try:
-            urlHost, urlPort = self.get_host_port(url)
-            urlPath = urllib.parse.urlparse(url).path
-            if urlPath == "":
-                urlPath = '/'
-            sock = self.connect(urlHost, urlPort)
+        
+        urlHost, urlPort = self.get_host_port(url)
+        urlPath = urllib.parse.urlparse(url).path
+        if urlPath == "":
+            urlPath = '/'
+        self.connect(urlHost, urlPort)
 
-            requestStr = f"POST " + urlPath + " HTTP/1.1\r\nHost: " + urlHost + "\r\nAccept: */*\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\n"
+        requestStr = f"POST " + urlPath + " HTTP/1.1\r\nHost: " + urlHost + "\r\nAccept: */*\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\n"
 
-            
+        if args:
             requestStr += "Content-Length: " + str(len(urllib.parse.urlencode(args).encode('utf-8'))) + "\r\n\r\n" + urllib.parse.urlencode(args)
-            print(requestStr)
-            self.sendall(requestStr)
+        else:
+            # If no args then content length is 0
+            requestStr += f"Content-Length: {0}\r\n\r\n"
+        # print(requestStr)
+        self.sendall(requestStr)
 
-            response = self.recvall(sock)
+        response = self.recvall(self.socket)
 
-            
+        
 
-            code = self.get_code(response)
-            body = self.get_body(response)
-            self.close()
-            return HTTPResponse(code, body)
-        except Exception as e:
-            print("Exception in post")
-            return HTTPResponse(404, str(e))
+        code = self.get_code(response)
+        print("code: " + str(code))
+        body = self.get_body(response)
+        self.close()
+        return HTTPResponse(code, body)
+        
         
 
     
