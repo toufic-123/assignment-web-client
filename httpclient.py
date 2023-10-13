@@ -38,7 +38,8 @@ class HTTPClient(object):
         parsedUrl = urllib.parse.urlparse(url)
         urlHost = parsedUrl.hostname
         urlPort = parsedUrl.port
-        
+        if urlPort == None:
+            urlPort = 80
         return urlHost,urlPort
 
 
@@ -52,17 +53,20 @@ class HTTPClient(object):
     
     
     def get_code(self, data):
-        return None
+        code = data.split()[1]
+        return int(code)
 
    
    
     def get_headers(self,data):
-        return None
+        splitHeader = data.split("\r\n\r\n")[0]
+        return splitHeader
 
     
     
     def get_body(self, data):
-        return None
+        splitBody = data.split("\r\n\r\n")[1]
+        return splitBody
     
     
     
@@ -94,6 +98,22 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         code = 500
         body = ""
+
+        urlHost, urlPort = self.get_host_port(url)
+        print((urlHost, urlPort))
+        urlPath = urllib.parse.urlparse(url).path
+        self.connect(urlHost, urlPort)
+
+        requestStr = f"GET " + urlPath + " HTTP/1.1\r\n\Host:" + urlHost + "\r\nConnection: close\r\n\r\n"
+        self.sendall(requestStr)
+        
+        response = self.recvall(self.socket)
+
+        self.close()
+
+        code = self.get_code(response)
+        body = self.get_body(response)
+        
         return HTTPResponse(code, body)
 
     
