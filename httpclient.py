@@ -35,11 +35,16 @@ class HTTPResponse(object):
 class HTTPClient(object):
     def get_host_port(self,url):
         
+        # parse url using urllib
         parsedUrl = urllib.parse.urlparse(url)
         urlHost = parsedUrl.hostname
         urlPort = parsedUrl.port
+        
+        # if the port is empty set it to 80 by default
         if urlPort == None:
             urlPort = 80
+        
+        # return the host and port
         return urlHost,urlPort
 
 
@@ -53,18 +58,21 @@ class HTTPClient(object):
     
     
     def get_code(self, data):
+        # get the second parameter
         code = data.split()[1]
         return int(code)
 
    
    
     def get_headers(self,data):
+        # get everything above the body
         splitHeader = data.split("\r\n\r\n")[0]
         return splitHeader
 
     
     
     def get_body(self, data):
+        # get the body
         splitBody = data.split("\r\n\r\n")[1]
         return splitBody
     
@@ -99,53 +107,78 @@ class HTTPClient(object):
         code = 500
         body = ""
 
+        # get the host and the port from the url
         urlHost, urlPort = self.get_host_port(url)
         # print((urlHost, urlPort))
+
+        # get the path from the url
         urlPath = urllib.parse.urlparse(url).path
+        
+        # if the path is empty set it to /
         if urlPath == "":
             urlPath = '/'
+        
+        # connect using the host and port
         self.connect(urlHost, urlPort)
 
+        # make the string to send
         requestStr = f"GET " + urlPath + " HTTP/1.1\r\nHost: " + urlHost + "\r\nConnection: close\r\n\r\n"
+        
+        # send the string
         self.sendall(requestStr)
         
+        # get the response from the socket
         response = self.recvall(self.socket)
 
         
-
+        # get the code and body from the response
         code = self.get_code(response)
         body = self.get_body(response)
+        
+        # close the socket
         self.close()
         return HTTPResponse(code, body)
 
     
     
     def POST(self, url, args=None):
-        code = 200
+        code = 500
         body = ""
         
+        # get the host and the port from the url
         urlHost, urlPort = self.get_host_port(url)
+        
+        # get the path from the url
         urlPath = urllib.parse.urlparse(url).path
+        
+        # if the path is empty set it to /
         if urlPath == "":
             urlPath = '/'
+        
+        # connect using the host and port from url
         self.connect(urlHost, urlPort)
 
+        # begin making the request string to send
         requestStr = f"POST " + urlPath + " HTTP/1.1\r\nHost: " + urlHost + "\r\nAccept: */*\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\n"
 
+        # if there is content find the length of the content, otherwise is it length 0
         if args:
             requestStr += "Content-Length: " + str(len(urllib.parse.urlencode(args).encode('utf-8'))) + "\r\n\r\n" + urllib.parse.urlencode(args)
         else:
-            requestStr += f"Content-Length: {0}\r\n\r\n"
-        # print(requestStr)
+            requestStr += f"Content-Length: 0 \r\n\r\n"
+        
+        # send the requestStr
         self.sendall(requestStr)
 
+        # get the response from the socket
         response = self.recvall(self.socket)
 
         
-
+        # get the code and body from the response
         code = self.get_code(response)
-        print("code: " + str(code))
         body = self.get_body(response)
+        
+        # close the socket
         self.close()
         return HTTPResponse(code, body)
         
