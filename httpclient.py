@@ -135,7 +135,6 @@ class HTTPClient(object):
         if args:
             requestStr += "Content-Length: " + str(len(urllib.parse.urlencode(args).encode('utf-8'))) + "\r\n\r\n" + urllib.parse.urlencode(args)
         else:
-            # If no args then content length is 0
             requestStr += f"Content-Length: {0}\r\n\r\n"
         # print(requestStr)
         self.sendall(requestStr)
