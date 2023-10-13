@@ -33,28 +33,50 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
+    def get_host_port(self,url):
+        
+        parsedUrl = urllib.parse.urlparse(url)
+        urlHost = parsedUrl.hostname
+        urlPort = parsedUrl.port
+        
+        return urlHost,urlPort
 
+
+
+    # dont need to touch
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
         return None
 
+    
+    
     def get_code(self, data):
         return None
 
+   
+   
     def get_headers(self,data):
         return None
 
+    
+    
     def get_body(self, data):
         return None
     
+    
+    
+    # dont need to touch
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
         
+    
+    
     def close(self):
         self.socket.close()
-
+    
+    
+    # dont need to touch
     # read everything from the socket
     def recvall(self, sock):
         buffer = bytearray()
@@ -67,22 +89,31 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
 
+    
+    
     def GET(self, url, args=None):
         code = 500
         body = ""
         return HTTPResponse(code, body)
 
+    
+    
     def POST(self, url, args=None):
         code = 500
         body = ""
         return HTTPResponse(code, body)
 
+    
+    
+    # dont need to touch
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
             return self.POST( url, args )
         else:
             return self.GET( url, args )
-    
+
+
+# dont need to touch    
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
