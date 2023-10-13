@@ -102,9 +102,11 @@ class HTTPClient(object):
         urlHost, urlPort = self.get_host_port(url)
         print((urlHost, urlPort))
         urlPath = urllib.parse.urlparse(url).path
+        if urlPath == "":
+            urlPath = '/'
         self.connect(urlHost, urlPort)
 
-        requestStr = f"GET " + urlPath + " HTTP/1.1\r\n\Host:" + urlHost + "\r\nConnection: close\r\n\r\n"
+        requestStr = f"GET " + urlPath + " HTTP/1.1\r\n\Host:" + urlHost + "\r\nConnection: closed\r\n\r\n"
         self.sendall(requestStr)
         
         response = self.recvall(self.socket)
@@ -121,6 +123,27 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         code = 500
         body = ""
+
+        urlHost, urlPort = self.get_host_port(url)
+        urlPath = urllib.parse.urlparse(url).path
+        if urlPath == "":
+            urlPath = '/'
+        self.connect(urlHost, urlPort)
+
+        requestStr = f"POST " + urlPath + " HTTP/1.1\r\n\Host:" + urlHost + "\r\nAccept: */*\r\nConnection: closed\r\nContent-Type: application/x-www-form-urlencoded\r\n"
+
+        
+        requestStr += "Content-Length: " + str(len(urllib.parse.urlencode(args).encode('utf-8'))) + "\r\n\r\n" + urllib.parse.urlencode(args)
+
+        self.sendall(requestStr)
+
+        response = self.recvall(self.socket)
+
+        self.close()
+
+        code = self.get_code(response)
+        body = self.get_body(response)
+
         return HTTPResponse(code, body)
 
     
